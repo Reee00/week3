@@ -47,10 +47,9 @@
           </ul>
           {{#if user}}
             <h1>Hello, {{user.name}}</h1>
-            <a href="/logout" class="btn btn-warning">Logout</a>
+            <a class="btn btn-warning" href="/logout" style="padding: 10px">
+            Logout</a>
           {{else}}
-            <a href="/register" style="padding: 10px;" class="btn btn-warning">Register</a>
-            <a href="/login" style="padding: 10px;" class="btn btn-warning">Login</a>
           {{/if}}
           <a class="btn btn-warning" href="/contact" style="padding: 10px">
             Contact

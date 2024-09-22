@@ -7,7 +7,7 @@ const session = require("express-session");
 const flash = require("express-flash");
 const { Sequelize, QueryTypes } = require("sequelize");
 const config = require("./config/config.json");
-const upload = require("./middlewares/upload-file");
+const upload = require("./middlewares/upload-file"); // Middleware untuk upload file
 
 const sequelize = new Sequelize(config.development);
 
@@ -18,7 +18,7 @@ app.set("view engine", "hbs");
 app.set("views", path.join(__dirname, "./views"));
 
 app.use("/assets", express.static(path.join(__dirname, "./assets")));
-app.use("/uploads", express.static(path.join(__dirname, "./uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "./uploads"))); // Direktori untuk menyimpan file
 
 app.use(express.urlencoded({ extended: false }));
 app.use(
@@ -28,7 +28,7 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
 );
@@ -37,10 +37,10 @@ app.use(flash());
 app.get("/", home);
 app.get("/blog", blog);
 app.get("/add-blog", addBlogView);
-app.post("/blog", upload.single("image"), addBlog);
+app.post("/blog", upload.single("image"), addBlog); // Middleware upload untuk tambah blog
 app.get("/delete-blog/:id", deleteBlog);
 app.get("/edit-blog/:id", editBlogView);
-app.post("/edit-blog/:id", editBlog);
+app.post("/edit-blog/:id", upload.single("image"), editBlog); // Middleware upload untuk edit blog
 app.get("/contact", contact);
 app.get("/testimonial", testimonial);
 app.get("/blog-detail/:id", blogDetail);
@@ -57,42 +57,36 @@ function loginView(req, res) {
 
 // Route untuk logout
 app.get("/logout", (req, res) => {
-  // Hapus sesi pengguna
   req.session.destroy((err) => {
-      if (err) {
-          return res.redirect('/'); 
-      }
-      res.redirect("/login");
+    if (err) {
+      return res.redirect('/');
+    }
+    res.redirect("/login");
   });
 });
 
 app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store'); // Menghentikan caching di browser
-    next();
+  res.set('Cache-Control', 'no-store'); // Menghentikan caching di browser
+  next();
 });
 
 const authMiddleware = (req, res, next) => {
   if (!req.session.user) {
-      return res.redirect('/login'); // Redirect ke halaman login jika sesi tidak ada
+    return res.redirect('/login');
   }
   next();
 };
 
-// Contoh penggunaan middleware pada rute yang dilindungi
+// Route untuk home dengan middleware autentikasi
 app.get("/", authMiddleware, (req, res) => {
   res.render("/");
 });
 
-
 async function login(req, res) {
   try {
     const { email, password } = req.body;
-
-    // cek email user apakah ada di database
     const user = await userModel.findOne({
-      where: {
-        email: email,
-      },
+      where: { email },
     });
 
     if (!user) {
@@ -100,18 +94,14 @@ async function login(req, res) {
       return res.redirect("/login");
     }
 
-    // cek password apakah valid dengan password yang sudah di hash
     const isValidPassword = await bcrypt.compare(password, user.password);
-
     if (!isValidPassword) {
       req.flash("error", "Email / password salah!");
       return res.redirect("/login");
     }
 
     req.session.user = user;
-
     req.flash("success", "Login berhasil!");
-
     res.redirect("/add-blog");
   } catch (error) {
     req.flash("error", "Something went wrong!");
@@ -126,13 +116,12 @@ function registerView(req, res) {
 async function register(req, res) {
   try {
     const { name, email, password } = req.body;
-
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     await userModel.create({
-      name: name,
-      email: email,
+      name,
+      email,
       password: hashedPassword,
     });
 
@@ -146,25 +135,15 @@ async function register(req, res) {
 
 function home(req, res) {
   const user = req.session.user;
-
   res.render("index", { user });
 }
 
 async function blog(req, res) {
-  // const query = `SELECT public.blogs.*, public.users.name AS username FROM public.blogs INNER JOIN public.users
-  // ON public.blogs."userId" = public.users.id;`;
-  // const result = await sequelize.query(query, { type: QueryTypes.SELECT });
   const result = await blogModel.findAll({
-    include: [
-      {
-        model: userModel,
-        attributes: ["name"],
-      },
-    ],
+    include: [{ model: userModel, attributes: ["name"] }],
   });
 
   const user = req.session.user;
-
   res.render("blog", { data: result, user });
 }
 
@@ -172,31 +151,28 @@ async function deleteBlog(req, res) {
   const { id } = req.params;
 
   let result = await blogModel.findOne({
-    where: {
-      id: id,
-    },
+    where: { id },
   });
 
   if (!result) return res.render("not-found");
 
   await blogModel.destroy({
-    where: {
-      id: id,
-    },
+    where: { id },
   });
+
   res.redirect("/blog");
 }
 
 async function addBlog(req, res) {
   const { title, content } = req.body;
-  const imagePath = req.file.filename;
+  const imagePath = req.file.filename; // Ambil nama file yang di-upload
   const userId = req.session.user.id;
 
   await blogModel.create({
-    title: title,
-    content: content,
+    title,
+    content,
     image: imagePath,
-    userId: userId,
+    userId,
   });
 
   res.redirect("/blog");
@@ -204,11 +180,8 @@ async function addBlog(req, res) {
 
 async function editBlogView(req, res) {
   const { id } = req.params;
-
   const result = await blogModel.findOne({
-    where: {
-      id: id,
-    },
+    where: { id },
   });
 
   if (!result) return res.render("not-found");
@@ -221,15 +194,18 @@ async function editBlog(req, res) {
   const { title, content } = req.body;
 
   const blog = await blogModel.findOne({
-    where: {
-      id: id,
-    },
+    where: { id },
   });
 
   if (!blog) return res.render("not-found");
 
   blog.title = title;
   blog.content = content;
+
+  // Jika ada gambar baru yang diunggah, perbarui gambar
+  if (req.file) {
+    blog.image = req.file.filename;
+  }
 
   await blog.save();
 
@@ -238,10 +214,7 @@ async function editBlog(req, res) {
 
 function addBlogView(req, res) {
   const user = req.session.user;
-
-  if (!user) {
-    return res.redirect("/login");
-  }
+  if (!user) return res.redirect("/login");
 
   res.render("add-blog");
 }
@@ -257,15 +230,8 @@ function testimonial(req, res) {
 async function blogDetail(req, res) {
   const { id } = req.params;
   const result = await blogModel.findOne({
-    where: {
-      id: id,
-    },
-    include: [
-      {
-        model: userModel, // Sertakan relasi ke user model untuk mengambil data penulis
-        attributes: ["name"], // Ambil hanya atribut yang diperlukan, misalnya 'name'
-      }
-    ]
+    where: { id },
+    include: [{ model: userModel, attributes: ["name"] }],
   });
 
   if (!result) return res.render("not-found");
@@ -273,5 +239,5 @@ async function blogDetail(req, res) {
 }
 
 app.listen(port, () => {
-  console.log("Server is running on PORT :", port);
+  console.log(`Server is running on PORT: ${port}`);
 });

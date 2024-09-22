@@ -61,37 +61,42 @@
 
     <div class="container text-center my-5">
       <h1>Create Post Blog</h1>
-      <form method="post" action="/edit-blog/{{data.id}}">
-        <div class="input-group mb-3 d-flex flex-column align-items-start">
-          <label style="font-weight: bold">Title</label>
-          <input
-            type="text"
-            class="form-control w-100"
-            id="input-blog-title"
-            name="title"
-            value="{{data.title}}"
-          />
-        </div>
+<form method="post" action="/edit-blog/{{data.id}}" enctype="multipart/form-data">
+  <div class="input-group mb-3 d-flex flex-column align-items-start">
+    <label style="font-weight: bold">Title</label>
+    <input
+      type="text"
+      class="form-control w-100"
+      id="input-blog-title"
+      name="title"
+      value="{{data.title}}"
+    />
+  </div>
 
-        <div class="input-group mb-3 d-flex flex-column align-items-start">
-          <label style="font-weight: bold">Content</label>
-          <textarea
-            class="form-control w-100"
-            aria-label="With textarea"
-            id="input-blog-content"
-            name="content"
-          >{{data.content}}</textarea>
-        </div>
+  <div class="input-group mb-3 d-flex flex-column align-items-start">
+    <label style="font-weight: bold">Content</label>
+    <textarea
+      class="form-control w-100"
+      aria-label="With textarea"
+      id="input-blog-content"
+      name="content"
+    >{{data.content}}</textarea>
+  </div>
 
-        <div class="input-group mb-3 d-flex flex-column align-items-start">
-          <label style="font-weight: bold">Upload Image</label>
-          <input type="file" class="form-control w-100" id="input-blog-image" />
-        </div>
+  <div class="input-group mb-3 d-flex flex-column align-items-start">
+    <label style="font-weight: bold">Current Image</label>
+    <img src="/uploads/{{data.image}}" alt="Blog Image" style="max-width: 200px; margin-bottom: 10px;">
+  </div>
 
-        <div class="w-100 d-flex justify-content-end">
-          <button class="btn btn-warning p-3" type="submit">Edit Blog</button>
-        </div>
-      </form>
+  <div class="input-group mb-3 d-flex flex-column align-items-start">
+    <label style="font-weight: bold">Upload New Image (optional)</label>
+    <input type="file" class="form-control w-100" name="image" id="input-blog-image" />
+  </div>
+
+  <div class="w-100 d-flex justify-content-end">
+    <button class="btn btn-warning p-3" type="submit">Edit Blog</button>
+  </div>
+</form>
     </div>
   </body>
 </html>
