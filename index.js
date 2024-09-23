@@ -164,7 +164,7 @@ async function deleteBlog(req, res) {
 }
 
 async function addBlog(req, res) {
-  const { title, content } = req.body;
+  const { title, content, isFeatured } = req.body;
   const imagePath = req.file.filename; // Ambil nama file yang di-upload
   const userId = req.session.user.id;
 
@@ -173,6 +173,7 @@ async function addBlog(req, res) {
     content,
     image: imagePath,
     userId,
+    isFeatured: isFeatured === "on", // Set true if checkbox is checked
   });
 
   res.redirect("/blog");
